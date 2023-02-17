@@ -1,0 +1,92 @@
+name: Trigger auto deployment for test-api
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ trunk ]
+
+  # Allow mannually trigger 
+  workflow_dispatch:      
+
+# Use for Managed identity
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  BuildDev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to container registry
+        uses: docker/login-action@v1
+        with:
+          registry: democontainerapp.azurecr.io
+          username: 
+          password: 
+
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: democontainerapp.azurecr.io/test-api:
+          file: Dockerfile
+          context: 
+
+      - name: Update image tag
+        run: sed -i 's/__GITHUB_SHA__//' ./.github/workflows/files/values.yaml
+
+      - name: Update revision tag
+        run: sed -i 's/__REVISION__//' ./.github/workflows/files/values.yaml
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: values
+          path: ./.github/workflows/files/values.yaml
+          retention-days: 7
+
+  deployDev:
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: build
+
+    steps:
+      - name: Download values artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: values
+
+      - name: Configure Azure Credentials
+        uses: azure/login@v1
+        with:
+          client-id: 
+          tenant-id: 
+          subscription-id: 
+          enable-AzPSSession: true
+
+      - name: Display yaml
+        run: cat values.yaml
+
+      - name: Create containerapp
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az containerapp create --name test-api --resource-group testRG --environment testEnvironment --image "democontainerapp.azurecr.io/test-api:" --registry-server democontainerapp.azurecr.io --target-port  --ingress 'external' --min-replicas 1 --max-replicas 2 --cpu 0.25 --memory 0.5Gi
+
+      - name: Deploy to containerapp
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az containerapp registry set -n test-api -g testRG --server democontainerapp.azurecr.io --username   --password 
+            az containerapp update -n test-api -g testRG --yaml values.yaml
