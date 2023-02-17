@@ -1,0 +1,48 @@
+# https://learn.microsoft.com/en-us/azure/container-apps/azure-resource-manager-api-spec?tabs=yaml#container-app-examples
+kind: containerapp
+location: westeurope
+name: test-api
+resourceGroup: testRG
+type: Microsoft.App/containerApps
+properties:
+  configuration:
+    ingress:
+      external: true
+      allowInsecure: false
+      targetPort: 
+      traffic:
+        - latestRevision: true
+          weight: 100
+      transport: Auto
+  template:
+    revisionSuffix: __REVISION__
+    containers:
+      - image: lamcontainerregistry.azurecr.io/backstage-container-apps:__GITHUB_SHA__
+        name: backstage
+        env:
+          - name: Test_Environment
+            value: test
+
+        probes:
+          - type: liveness
+            httpGet:
+              path: "/"
+              port: 80
+            initialDelaySeconds: 7
+            periodSeconds: 3
+          - type: readiness
+            httpGet:
+              path: "/"
+              port: 80
+          - type: startup
+            httpGet:
+              path: "/"
+              port: 80
+
+
+
+
+
+
+
+
