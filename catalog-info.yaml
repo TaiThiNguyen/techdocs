@@ -5,6 +5,6 @@ metadata:
   description: A sample catalog for Backstage
   backstage.io/techdocs-ref: dir:.
 spec:
-  type: service
+  type: grpc
   owner: user:guest
   lifecycle: experimental
