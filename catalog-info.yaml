@@ -1,7 +1,7 @@
 apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
-  name: tap-gui-catalog-info
+  name: lam-catalog-info
   description: A sample catalog for Backstage
   annotations:
     'backstage.io/techdocs-ref': dir:.
