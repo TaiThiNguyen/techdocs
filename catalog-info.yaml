@@ -3,8 +3,6 @@ kind: Location
 metadata:
   name: lam-catalog-info
   description: A sample catalog for Backstage
-  annotations:
-    'backstage.io/techdocs-ref': dir:.
 spec:
   type: service
   owner: user:guest
