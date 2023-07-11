@@ -1,8 +1,9 @@
 apiVersion: backstage.io/v1alpha1
-kind: Location
+kind: API
 metadata:
   name: lam-catalog-info
   description: A sample catalog for Backstage
+  backstage.io/techdocs-ref: dir:.
 spec:
   type: service
   owner: user:guest
